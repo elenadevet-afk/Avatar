@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root { --accent: #4a90e2; --bg-editor: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Стили Редактора */
+        #editor-container { background: var(--bg-editor); padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 550px; margin-bottom: 30px; border: 1px solid #ddd; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #444; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .btn-main { background: #2ecc71; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; margin-top: 10px; transition: 0.3s; }
+        .btn-gen { background: #3498db; margin-top: 10px; }
+        .btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Поле вывода готового кода */
+        #output-code { width: 100%; height: 100px; margin-top: 15px; display: none; font-family: monospace; font-size: 12px; background: #2c3e50; color: #ecf0f1; padding: 10px; border-radius: 5px; }
+
+        /* Игровое поле (превью) */
+        #game-stage { position: relative; width: 800px; height: 450px; display: none; overflow: hidden; background: transparent; border: 2px dashed #ccc; border-radius: 15px; }
+        #avatar-img { position: absolute; bottom: 10px; left: 30px; width: 220px; transition: 0.3s; z-index: 2; }
+        #speech-bubble { position: absolute; top: 40px; left: 260px; background: white; border: 3px solid var(--accent); padding: 15px; border-radius: 20px; width: 300px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 3; }
+        #speech-bubble::after { content: ''; position: absolute; left: -22px; top: 50%; border: 11px solid transparent; border-right-color: var(--accent); }
+        #options-container { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); display: grid; gap: 10px; width: 250px; z-index: 3; }
+        .option-btn { background: white; border: 2px solid #ddd; padding: 12px; border-radius: 10px; cursor: pointer; text-align: center; font-weight: bold; transition: 0.2s; }
+    </style>
+</head>
+<body>
+
+<div id="editor-container">
+    <h3 style="margin-top:0">🎨 Настройка игры</h3>
+    <div class="input-group"><label>Аватар (спокойный) URL:</label><input type="text" id="img-normal" value="https://cdn-icons-png.flaticon.com/512/4333/4333609.png"></div>
+    <div class="input-group"><label>Аватар (радостный) URL:</label><input type="text" id="img-happy" value="https://cdn-icons-png.flaticon.com/512/4333/4333614.png"></div>
+    <div class="input-group"><label>Текст вопроса:</label><input type="text" id="text-speech" value="How do you say 'Яблоко' in English?"></div>
+    <div class="input-group"><label>Варианты (через запятую):</label><input type="text" id="text-options" value="Pear, Apple, Banana"></div>
+    <div class="input-group"><label>Верный ответ (номер):</label><input type="number" id="correct-num" value="2"></div>
+    
+    <button class="btn-main" onclick="previewGame()">👁 Предпросмотр</button>
+    <button class="btn-main btn-gen" onclick="generateCode()">📋 Получить код для Genially</button>
+    
+    <textarea id="output-code" readonly placeholder="Здесь появится код для копирования..."></textarea>
+</div>
+
+<div id="game-stage">
+    <img id="avatar-img" src="" alt="Avatar">
+    <div id="speech-bubble"><strong id="display-q">Question:</strong><p id="display-text" style="margin: 5px 0 0 0;"></p></div>
+    <div id="options-container"></div>
+</div>
+
+<script>
+    function previewGame() {
+        document.getElementById('game-stage').style.display = 'block';
+        runGameLogic('game-stage');
+    }
+
+    function runGameLogic(containerId) {
+        const normal = document.getElementById('img-normal').value;
+        const happy = document.getElementById('img-happy').value;
+        const speechText = document.getElementById('text-speech').value;
+        const options = document.getElementById('text-options').value.split(',');
+        const correct = parseInt(document.getElementById('correct-num').value) - 1;
+
+        const stage = document.getElementById(containerId);
+        stage.querySelector('#avatar-img').src = normal;
+        stage.querySelector('#display-text').innerText = speechText;
+        
+        const optContainer = stage.querySelector('#options-container');
+        optContainer.innerHTML = '';
+        
+        options.forEach((opt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerText = opt.trim();
+            btn.onclick = () => {
+                const utter = new SpeechSynthesisUtterance();
+                if(i === correct) {
+                    stage.querySelector('#avatar-img').src = happy;
+                    utter.text = "Correct! Well done!";
+                    btn.style.background = "#d4edda";
+                } else {
+                    utter.text = "No, try again!";
+                    btn.style.background = "#f8d7da";
+                }
+                window.speechSynthesis.speak(utter);
+            };
+            optContainer.appendChild(btn);
+        });
+
+        const startUtter = new SpeechSynthesisUtterance(speechText);
+        startUtter.lang = 'en-US';
+        window.speechSynthesis.speak(startUtter);
+    }
+
+    function generateCode() {
+        const config = {
+            normal: document.getElementById('img-normal').value,
+            happy: document.getElementById('img-happy').value,
+            text: document.getElementById('text-speech').value,
+            opts: document.getElementById('text-options').value,
+            corr: document.getElementById('correct-num').value
+        };
+
+        const finalCode = `
+<div id="genially-game-container" style="position:relative; width:800px; height:450px; overflow:hidden; font-family:sans-serif;">
+    <img id="g-avatar" src="${config.normal}" style="position:absolute; bottom:10px; left:30px; width:220px; transition:0.3s; z-index:2;">
+    <div style="position:absolute; top:40px; left:260px; background:white; border:3px solid #4a90e2; padding:15px; border-radius:20px; width:300px; box-shadow:0 5px 15px rgba(0,0,0,0.1); z-index:3;">
+        <p style="margin:0;">${config.text}</p>
+    </div>
+    <div id="g-opts" style="position:absolute; right:40px; top:50%; transform:translateY(-50%); display:grid; gap:10px; width:250px; z-index:3;"></div>
+</div>
+<script>
+    (function(){
+        const opts = "${config.opts}".split(',');
+        const corr = ${config.corr} - 1;
+        const container = document.getElementById('g-opts');
+        const avatar = document.getElementById('g-avatar');
+        
+        function speak(t){ 
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(t); 
+            u.lang='en-US'; 
+            window.speechSynthesis.speak(u); 
+        }
+
+        opts.forEach((text, i) => {
+            const b = document.createElement('div');
+            b.innerText = text.trim();
+            b.style = "background:white; border:2px solid #ddd; padding:12px; border-radius:10px; cursor:pointer; text-align:center; font-weight:bold;";
+            b.onclick = () => {
+                if(i === corr) {
+                    avatar.src = "${config.happy}";
+                    speak("Excellent!");
+                    b.style.background = "#d4edda";
+                } else {
+                    speak("Try again!");
+                    b.style.background = "#f8d7da";
+                }
+            };
+            container.appendChild(b);
+        });
+        setTimeout(() => speak("${config.text}"), 500);
+    })();
+<\/script>`.trim();
+
+        const output = document.getElementById('output-code');
+        output.style.display = 'block';
+        output.value = finalCode;
+        output.select();
+        alert("Код готов и выделен! Скопируйте его (Ctrl+C).");
+    }
+</script>
+
+</body>
+</html>
