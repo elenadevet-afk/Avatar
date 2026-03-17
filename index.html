@@ -3,153 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        :root { --accent: #0984e3; --bg: #f5f6fa; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        #editor-panel { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 700px; border: 1px solid #dcdde1; }
-        .quest-block { border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 15px; background: #f1f2f6; border-radius: 0 10px 10px 0; }
-        label { display: block; font-size: 12px; font-weight: bold; margin-top: 10px; color: #2f3640; }
+        :root { --p-color: #4a90e2; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        #editor { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 700px; }
+        .q-box { border-left: 5px solid var(--p-color); padding: 15px; margin-bottom: 10px; background: #f9f9f9; border-radius: 8px; }
         input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .btn { border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; flex: 1; transition: 0.2s; margin-top: 10px; }
-        .btn-add { background: #44bd32; color: white; }
-        .btn-gen { background: var(--accent); color: white; }
-        .btn-test { background: #fbc531; color: #2f3640; }
-        #final-code-area { width: 100%; height: 120px; margin-top: 20px; display: none; background: #2f3640; color: #00d2d3; padding: 10px; font-family: monospace; border-radius: 8px; }
+        .btn { border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; transition: 0.3s; }
+        .btn-gen { background: var(--p-color); color: white; font-size: 16px; }
+        .btn-test { background: #ffeaa7; color: #2d3436; }
+        #res-code { width: 100%; height: 120px; margin-top: 20px; display: none; background: #2d3436; color: #55efc4; padding: 10px; font-family: monospace; border-radius: 8px; }
     </style>
 </head>
 <body>
 
-<div id="editor-panel">
-    <h2 style="margin-top:0; color:var(--accent)">🛠️ Исправленный конструктор для Genially</h2>
+<div id="editor">
+    <h2 style="margin:0 0 15px 0">🎭 Конструктор: Аватар в полный рост</h2>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <div><label>Аватар (Обычный) URL:</label><input type="text" id="main-img" value="https://cdn-icons-png.flaticon.com/512/4844/4844571.png"></div>
-        <div><label>Аватар (Радостный) URL:</label><input type="text" id="happy-img" value="https://cdn-icons-png.flaticon.com/512/4844/4844551.png"></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div><label>Аватар (Обычный) URL:</label><input type="text" id="img1" value="https://cdn-icons-png.flaticon.com/512/4844/4844571.png"></div>
+        <div><label>Аватар (Радостный) URL:</label><input type="text" id="img2" value="https://cdn-icons-png.flaticon.com/512/4844/4844551.png"></div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: end;">
-        <div><label>Язык:</label><select id="v-lang"><option value="en-US">English</option><option value="ru-RU" selected>Русский</option></select></div>
-        <div><label>Голос:</label><select id="v-type"><option value="male">Мужской</option><option value="female">Женский</option><option value="child">Детский</option></select></div>
-        <button class="btn btn-test" onclick="testVoice()">Тест 🔊</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:10px;">
+        <select id="lang"><option value="ru-RU">Русский</option><option value="en-US">English</option></select>
+        <button class="btn btn-test" onclick="testM()">Послушать Мужской Голос 🔊</button>
     </div>
 
-    <div id="questions-list" style="margin-top:20px;">
-        <div class="quest-block">
+    <div id="q-list" style="margin-top:20px;">
+        <div class="q-box">
             <strong>Задание №1</strong>
-            <input type="text" class="q-text" value="Как переводится слово 'Book'?" style="margin-bottom:5px">
-            <input type="text" class="q-opts" value="Книга, Ручка, Тетрадь">
-            <input type="number" class="q-corr" value="1">
+            <input type="text" class="qt" value="Здравствуйте! Выберите правильный вариант.">
+            <input type="text" class="qo" value="Вариант А, Вариант Б">
+            <input type="number" class="qc" value="1">
         </div>
     </div>
 
-    <div style="display:flex; gap:10px">
-        <button class="btn btn-add" onclick="addQ()">➕ Добавить</button>
-        <button class="btn btn-gen" onclick="generate()">📋 Сгенерировать код</button>
-    </div>
-    <textarea id="final-code-area" readonly></textarea>
+    <button class="btn btn-gen" onclick="gen()">Сгенерировать прозрачный виджет для Genially</button>
+    <textarea id="res-code" readonly></textarea>
 </div>
 
 <script>
-    let count = 1;
-    function addQ() {
-        if(count >= 10) return; count++;
-        const div = document.createElement('div');
-        div.className = 'quest-block';
-        div.innerHTML = `<strong>Задание №${count}</strong><input type="text" class="q-text" placeholder="Текст"><input type="text" class="q-opts" placeholder="Варианты"><input type="number" class="q-corr" value="1">`;
-        document.getElementById('questions-list').appendChild(div);
-    }
-
-    function getUtt(txt) {
+    function testM() {
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(txt);
-        const lang = document.getElementById('v-lang').value;
-        const type = document.getElementById('v-type').value;
-        u.lang = lang;
+        const u = new SpeechSynthesisUtterance("Привет! Теперь я звучу как мужчина?");
+        u.lang = document.getElementById('lang').value;
         const vs = window.speechSynthesis.getVoices();
-        let voice = vs.find(v => v.lang.includes(lang) && v.name.toLowerCase().includes(type === 'child' ? 'female' : type));
-        if(!voice) voice = vs.find(v => v.lang.includes(lang));
-        if(voice) u.voice = voice;
-
-        if(type === 'male') { u.pitch = 0.5; u.rate = 0.85; }
-        else if(type === 'child') { u.pitch = 1.8; u.rate = 1.1; }
-        return u;
+        // Жесткий поиск мужского голоса
+        u.voice = vs.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('pavel') || v.name.toLowerCase().includes('dmitry')) || vs[0];
+        u.pitch = 0.4; // Максимально низкий бас
+        u.rate = 0.8;
+        window.speechSynthesis.speak(u);
     }
 
-    function testVoice() {
-        const msg = document.getElementById('v-lang').value === 'ru-RU' ? "Проверка мужского голоса." : "Testing male voice.";
-        window.speechSynthesis.speak(getUtt(msg));
-    }
-
-    function generate() {
+    function gen() {
         const conf = {
-            l: document.getElementById('v-lang').value,
-            t: document.getElementById('v-type').value,
-            in: document.getElementById('main-img').value,
-            ih: document.getElementById('happy-img').value,
-            qt: Array.from(document.querySelectorAll('.q-text')).map(i => i.value),
-            qo: Array.from(document.querySelectorAll('.q-opts')).map(i => i.value),
-            qc: Array.from(document.querySelectorAll('.q-corr')).map(i => i.value)
+            l: document.getElementById('lang').value,
+            i1: document.getElementById('img1').value,
+            i2: document.getElementById('img2').value,
+            qt: Array.from(document.querySelectorAll('.qt')).map(i => i.value),
+            qo: Array.from(document.querySelectorAll('.qo')).map(i => i.value),
+            qc: Array.from(document.querySelectorAll('.qc')).map(i => i.value)
         };
 
-        const finalCode = `
-<div id="genially-widget" style="width:100%; height:100%; min-height:500px; position:relative; overflow:hidden; background:transparent; font-family:sans-serif;">
-    <div id="v-prog" style="position:absolute; top:10px; left:10px; font-weight:bold; color:#0984e3; z-index:10;"></div>
-    <img id="v-avatar" src="${conf.in}" style="position:absolute; bottom:0; left:5%; height:85%; transition:0.3s; z-index:1;">
-    <div style="position:absolute; top:40px; left:35%; background:white; border:3px solid #0984e3; padding:15px; border-radius:20px; width:50%; box-shadow:0 5px 15px rgba(0,0,0,0.1); z-index:2;">
-        <p id="v-msg" style="margin:0; font-size:1.1em;"></p>
+        const code = `
+<div id="full-body-widget" style="width:100%; height:100vh; position:relative; overflow:hidden; background:transparent;">
+    <img id="v-char" src="${conf.i1}" style="position:absolute; bottom:0; left:0; height:100%; object-fit:contain; z-index:1; pointer-events:none;">
+    <div id="v-bubble" style="position:absolute; top:5%; left:30%; background:white; border:4px solid #4a90e2; padding:15px; border-radius:20px; width:55%; box-shadow:0 10px 25px rgba(0,0,0,0.2); z-index:2; font-family:sans-serif;">
+        <p id="v-txt" style="margin:0; font-size:1.2em; font-weight:bold;"></p>
+        <div id="v-prg" style="font-size:0.7em; color:#999; margin-top:5px;"></div>
     </div>
-    <div id="v-btns" style="position:absolute; left:35%; top:180px; display:grid; gap:10px; width:50%; z-index:3;"></div>
+    <div id="v-ans" style="position:absolute; left:35%; top:35%; display:grid; gap:10px; width:55%; z-index:3;"></div>
 </div>
 
 <script>
 (function(){
-    const cfg = { qt:${JSON.stringify(conf.qt)}, qo:${JSON.stringify(conf.qo)}, qc:${JSON.stringify(conf.qc)}, imgs:["${conf.in}","${conf.ih}"], l:"${conf.l}", v:"${conf.t}" };
+    const c = { t:${JSON.stringify(conf.qt)}, o:${JSON.stringify(conf.qo)}, c:${JSON.stringify(conf.qc)}, imgs:["${conf.i1}","${conf.i2}"], l:"${conf.l}" };
     let cur = 0;
-    const av=document.getElementById('v-avatar'), msg=document.getElementById('v-msg'), btns=document.getElementById('v-btns'), prg=document.getElementById('v-prog');
+    const av=document.getElementById('v-char'), txt=document.getElementById('v-txt'), ans=document.getElementById('v-ans'), prg=document.getElementById('v-prg');
 
-    function speak(t) {
+    function speak(s) {
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(t); u.lang = cfg.l;
+        const u = new SpeechSynthesisUtterance(s); u.lang = c.l;
         const vs = window.speechSynthesis.getVoices();
-        let v = vs.find(x => x.lang.includes(cfg.l) && x.name.toLowerCase().includes(cfg.v === 'child' ? 'female' : cfg.v));
-        if(!v) v = vs.find(x => x.lang.includes(cfg.l));
-        if(v) u.voice = v;
-        if(cfg.v === 'male') { u.pitch = 0.5; u.rate = 0.85; } else if(cfg.v === 'child') { u.pitch = 1.8; u.rate = 1.1; }
+        u.voice = vs.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('pavel') || v.name.toLowerCase().includes('dmitry')) || vs[0];
+        u.pitch = 0.4; u.rate = 0.8;
         window.speechSynthesis.speak(u);
     }
 
-    function init() {
-        if(cur >= cfg.qt.length) {
-            prg.innerText = ""; av.src = cfg.imgs[1]; msg.innerHTML = "🏆 <b>Готово!</b>"; btns.innerHTML = ""; speak(msg.innerText);
-            return;
+    function play() {
+        if(cur >= c.t.length) {
+            av.src = c.imgs[1]; txt.innerHTML = "🎉 Задания выполнены!"; ans.innerHTML = ""; prg.innerText=""; speak("Задания выполнены!"); return;
         }
-        prg.innerText = "Задание " + (cur+1) + " / " + cfg.qt.length;
-        av.src = cfg.imgs[0]; msg.innerText = cfg.qt[cur]; btns.innerHTML = "";
-        cfg.qo[cur].split(',').forEach((a, i) => {
+        av.src = c.imgs[0]; txt.innerText = c.t[cur]; prg.innerText = "Вопрос " + (cur+1) + " / " + c.t.length;
+        ans.innerHTML = "";
+        c.o[cur].split(',').forEach((t, i) => {
             const b = document.createElement('button');
-            b.innerText = a.trim();
-            b.style = "padding:12px; border-radius:10px; border:2px solid #0984e3; background:white; cursor:pointer; font-weight:bold;";
+            b.innerText = t.trim();
+            b.style = "padding:15px; border-radius:12px; border:3px solid #4a90e2; background:rgba(255,255,255,0.9); cursor:pointer; font-weight:bold; font-size:1.1em; transition:0.2s;";
             b.onclick = () => {
-                if(i == (cfg.qc[cur]-1)) {
-                    av.src = cfg.imgs[1]; speak("Верно!"); cur++; setTimeout(init, 1500);
+                if(i == (c.c[cur]-1)) {
+                    av.src = c.imgs[1]; speak("Верно!"); cur++; setTimeout(play, 1500);
                 } else {
                     speak("Нет"); b.style.background = "#ff7675"; setTimeout(()=>b.style.background="white", 600);
                 }
             };
-            btns.appendChild(b);
+            ans.appendChild(b);
         });
-        speak(cfg.qt[cur]);
+        speak(c.t[cur]);
     }
-
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = init;
-    }
-    setTimeout(init, 1000);
+    window.speechSynthesis.onvoiceschanged = play;
+    setTimeout(play, 1000);
 })();
 <\/script>`.trim();
-        
-        const area = document.getElementById('final-code-area');
-        area.style.display = 'block'; area.value = finalCode; area.select();
-        alert("Код готов! Скопируйте его.");
+
+        document.getElementById('res-code').style.display = 'block';
+        document.getElementById('res-code').value = code;
+        document.getElementById('res-code').select();
     }
 </script>
 
