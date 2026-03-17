@@ -6,46 +6,36 @@
         :root { --p-color: #6c5ce7; --bg: #f4f7fa; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
         #editor { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 700px; }
-        .q-item { border-left: 5px solid var(--p-color); padding: 15px; margin-bottom: 10px; background: #f9f9f9; border-radius: 8px; }
+        .q-item { border-left: 5px solid var(--p-color); padding: 15px; margin-bottom: 10px; background: #f9f9f9; border-radius: 8px; position: relative; }
         label { display: block; font-size: 12px; font-weight: bold; margin-top: 10px; color: #444; }
         input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .btn { border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; width: 100%; }
-        .btn-add { background: #00b894; color: white; }
-        .btn-gen { background: var(--p-color); color: white; font-size: 16px; }
-        .btn-test { background: #fab1a0; color: #2d3436; }
+        .btn { border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        .btn-add { background: #00b894; color: white; width: 100%; }
+        .btn-gen { background: var(--p-color); color: white; width: 100%; font-size: 16px; }
+        .btn-test { background: #fab1a0; color: #2d3436; width: 100%; }
         #res-code { width: 100%; height: 150px; margin-top: 20px; display: none; background: #2d3436; color: #55efc4; padding: 10px; font-family: monospace; border-radius: 8px; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <div id="editor">
-    <h2 style="margin:0 0 15px 0; color: var(--p-color);">🛠️ Конструктор с выбором позиции</h2>
+    <h2 style="margin:0 0 15px 0; color: var(--p-color);">🛠️ Финальный конструктор iframe</h2>
     
-    <label>URL аватара (полный рост, PNG):</label>
+    <label>URL аватара (в полный рост, желательно PNG):</label>
     <input type="text" id="avatar-url" value="https://cdn-icons-png.flaticon.com/512/4844/4844571.png">
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top:10px; align-items: end;">
         <div>
-            <label>Позиция на слайде:</label>
-            <select id="v-pos">
-                <option value="left">Аватар СЛЕВА</option>
-                <option value="right">Аватар СПРАВА</option>
-            </select>
+            <label>Язык:</label>
+            <select id="v-lang"><option value="ru-RU">Русский</option><option value="en-US">English</option></select>
         </div>
         <div>
             <label>Голос:</label>
             <select id="v-type">
-                <option value="male">Мужской (Бас)</option>
+                <option value="male">Мужской</option>
                 <option value="female" selected>Женский</option>
                 <option value="child">Детский</option>
             </select>
-        </div>
-    </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end;">
-        <div>
-            <label>Язык:</label>
-            <select id="v-lang"><option value="ru-RU">Русский</option><option value="en-US">English</option></select>
         </div>
         <button class="btn btn-test" onclick="testV()">Тест голоса 🔊</button>
     </div>
@@ -53,36 +43,43 @@
     <div id="q-container" style="margin-top:20px;">
         <div class="q-item">
             <strong>Задание №1</strong>
-            <input type="text" class="qt" value="Где стоит аватар?" placeholder="Текст вопроса">
-            <input type="text" class="qo" value="Справа, Слева" placeholder="Варианты через запятую">
-            <input type="number" class="qc" value="1">
+            <input type="text" class="qt" value="Как переводится слово 'Apple'?" placeholder="Текст вопроса">
+            <input type="text" class="qo" value="Яблоко, Груша, Банан" placeholder="Варианты через запятую">
+            <input type="number" class="qc" value="1" title="Номер правильного ответа">
         </div>
     </div>
 
-    <button class="btn btn-add" onclick="addQ()">➕ Добавить задание</button>
-    <button class="btn btn-gen" onclick="generate()">Сгенерировать iframe</button>
+    <button class="btn btn-add" onclick="addQ()">➕ Добавить еще задание</button>
+    <button class="btn btn-gen" onclick="generate()">Сгенерировать код iframe</button>
     
-    <textarea id="res-code" readonly></textarea>
+    <textarea id="res-code" readonly placeholder="Здесь появится готовый код..."></textarea>
 </div>
 
 <script>
     let qCount = 1;
+
     function addQ() {
-        if(qCount >= 10) return alert("Максимум 10");
+        if(qCount >= 10) return alert("Максимум 10 заданий");
         qCount++;
         const div = document.createElement('div');
         div.className = 'q-item';
-        div.innerHTML = `<strong>Задание №${qCount}</strong><input type="text" class="qt" placeholder="Текст"><input type="text" class="qo" placeholder="Варианты"><input type="number" class="qc" value="1">`;
+        div.innerHTML = `<strong>Задание №${qCount}</strong>
+            <input type="text" class="qt" placeholder="Текст вопроса">
+            <input type="text" class="qo" placeholder="Варианты через запятую">
+            <input type="number" class="qc" value="1">`;
         document.getElementById('q-container').appendChild(div);
     }
 
     function testV() {
         window.speechSynthesis.cancel();
         const type = document.getElementById('v-type').value;
-        const u = new SpeechSynthesisUtterance("Проверка звука.");
-        u.lang = document.getElementById('v-lang').value;
+        const lang = document.getElementById('v-lang').value;
+        const msg = lang === 'ru-RU' ? "Проверка голоса." : "Voice check.";
+        const u = new SpeechSynthesisUtterance(msg);
+        u.lang = lang;
         const vs = window.speechSynthesis.getVoices();
-        u.voice = vs.find(v => v.lang.includes(u.lang) && v.name.toLowerCase().includes(type === 'male' ? 'male' : 'female')) || vs[0];
+        u.voice = vs.find(v => v.lang.includes(lang) && v.name.toLowerCase().includes(type === 'male' ? 'male' : 'female')) || vs.find(v => v.lang.includes(lang));
+        
         if(type === 'male') { u.pitch = 0.4; u.rate = 0.8; }
         else if(type === 'child') { u.pitch = 1.7; u.rate = 1.1; }
         window.speechSynthesis.speak(u);
@@ -91,7 +88,6 @@
     function generate() {
         const conf = {
             url: document.getElementById('avatar-url').value,
-            pos: document.getElementById('v-pos').value,
             lang: document.getElementById('v-lang').value,
             vType: document.getElementById('v-type').value,
             texts: Array.from(document.querySelectorAll('.qt')).map(i => i.value),
@@ -99,45 +95,50 @@
             corrs: Array.from(document.querySelectorAll('.qc')).map(i => i.value)
         };
 
-        const isLeft = conf.pos === 'left';
         const finalHTML = `
-<div id="v-root" style="width:100%; height:100vh; position:relative; overflow:hidden; background:transparent; font-family:sans-serif;">
-    <img id="v-char" src="${conf.url}" style="position:absolute; bottom:0; ${isLeft ? 'left:0;' : 'right:0;'} height:100%; object-fit:contain; z-index:1;">
-    <div style="position:absolute; top:5%; ${isLeft ? 'left:35%;' : 'right:35%;'} background:white; border:4px solid #6c5ce7; padding:15px; border-radius:20px; width:50%; box-shadow:0 10px 20px rgba(0,0,0,0.1); z-index:2;">
-        <p id="v-msg" style="margin:0; font-size:1.2em; font-weight:bold; color:#333;"></p>
+<div id="app-root" style="width:100%; height:100vh; position:relative; overflow:hidden; background:transparent; font-family:sans-serif;">
+    <img id="avatar-img" src="${conf.url}" style="position:absolute; bottom:0; left:0; height:100%; object-fit:contain; z-index:1;">
+    <div style="position:absolute; top:5%; left:32%; background:white; border:4px solid #6c5ce7; padding:15px; border-radius:20px; width:50%; box-shadow:0 10px 20px rgba(0,0,0,0.1); z-index:2;">
+        <p id="msg-text" style="margin:0; font-size:1.2em; font-weight:bold; color:#333;"></p>
     </div>
-    <div id="v-btns" style="position:absolute; ${isLeft ? 'left:38%;' : 'right:38%;'} top:35%; display:grid; gap:10px; width:50%; z-index:3;"></div>
+    <div id="btn-area" style="position:absolute; left:35%; top:35%; display:grid; gap:10px; width:50%; z-index:3;"></div>
 </div>
+
 <script>
 (function(){
-    const d = { t: ${JSON.stringify(conf.texts)}, o: ${JSON.stringify(conf.opts)}, c: ${JSON.stringify(conf.corrs)}, l: "${conf.lang}", v: "${conf.vType}" };
-    let cur = 0;
-    const msg = document.getElementById('v-msg'), btns = document.getElementById('v-btns');
+    const data = { t: ${JSON.stringify(conf.texts)}, o: ${JSON.stringify(conf.opts)}, c: ${JSON.stringify(conf.corrs)}, l: "${conf.lang}", v: "${conf.vType}" };
+    let idx = 0;
+    const msg = document.getElementById('msg-text'), area = document.getElementById('btn-area');
 
     function speak(s) {
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(s); u.lang = d.l;
+        const u = new SpeechSynthesisUtterance(s); u.lang = data.l;
         const vs = window.speechSynthesis.getVoices();
-        u.voice = vs.find(x => x.lang.includes(d.l) && x.name.toLowerCase().includes(d.v === 'male' ? 'male' : 'female')) || vs[0];
-        if(d.v === 'male') { u.pitch = 0.4; u.rate = 0.8; }
-        else if(d.v === 'child') { u.pitch = 1.7; u.rate = 1.1; }
+        u.voice = vs.find(x => x.lang.includes(data.l) && x.name.toLowerCase().includes(data.v === 'male' ? 'male' : 'female')) || vs.find(x => x.lang.includes(data.l));
+        if(data.v === 'male') { u.pitch = 0.4; u.rate = 0.8; }
+        else if(data.v === 'child') { u.pitch = 1.7; u.rate = 1.1; }
         window.speechSynthesis.speak(u);
     }
 
     function load() {
-        if(cur >= d.t.length) { msg.innerHTML = "🏆 Готово!"; btns.innerHTML = ""; speak("Задания выполнены!"); return; }
-        msg.innerText = d.t[cur]; btns.innerHTML = "";
-        d.o[cur].split(',').forEach((txt, i) => {
+        if(idx >= data.t.length) {
+            msg.innerHTML = "🏆 Все задания выполнены!"; area.innerHTML = ""; speak(msg.innerText); return;
+        }
+        msg.innerText = data.t[idx]; area.innerHTML = "";
+        data.o[idx].split(',').forEach((txt, i) => {
             const b = document.createElement('button');
             b.innerText = txt.trim();
             b.style = "padding:15px; border-radius:12px; border:3px solid #6c5ce7; background:rgba(255,255,255,0.95); cursor:pointer; font-weight:bold; font-size:1.1em; color:#333;";
             b.onclick = () => {
-                if(i == (d.c[cur]-1)) { speak("Правильно!"); cur++; setTimeout(load, 1500); }
-                else { speak("Нет"); b.style.background = "#ff7675"; setTimeout(()=>b.style.background="white", 600); }
+                if(i == (data.c[idx]-1)) {
+                    speak("Правильно!"); idx++; setTimeout(load, 1500);
+                } else {
+                    speak("Попробуй еще раз"); b.style.background = "#ff7675"; setTimeout(()=>b.style.background="white", 600);
+                }
             };
-            btns.appendChild(b);
+            area.appendChild(b);
         });
-        speak(d.t[cur]);
+        speak(data.t[idx]);
     }
     window.speechSynthesis.onvoiceschanged = load;
     setTimeout(load, 1000);
@@ -145,8 +146,11 @@
 <\/script>`.trim();
 
         const res = document.getElementById('res-code');
-        res.style.display = 'block'; res.value = finalHTML; res.select();
+        res.style.display = 'block';
+        res.value = finalHTML;
+        res.select();
     }
 </script>
+
 </body>
 </html>
