@@ -14,12 +14,13 @@
         .btn-gen { background: var(--p-color); color: white; font-size: 16px; }
         .btn-test { background: #fab1a0; color: #2d3436; }
         #res-code { width: 100%; height: 150px; margin-top: 20px; display: none; background: #2d3436; color: #55efc4; padding: 10px; font-family: monospace; border-radius: 8px; font-size: 11px; }
+        .range-box { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div id="editor">
-    <h2 style="margin:0 0 15px 0; color: var(--p-color);">🎙️ Конструктор: Разные голоса + Повтор</h2>
+    <h2 style="margin:0 0 15px 0; color: var(--p-color);">🎙️ Конструктор: Настройка размера + Молчаливый режим</h2>
     
     <label>URL аватара (PNG):</label>
     <input type="text" id="avatar-url" value="https://cdn-icons-png.flaticon.com/512/4844/4844571.png">
@@ -30,25 +31,32 @@
             <select id="v-pos"><option value="left">СЛЕВА</option><option value="right">СПРАВА</option></select>
         </div>
         <div>
-            <label>Голос:</label>
-            <select id="v-type">
-                <option value="male">Мужской (Бас)</option>
-                <option value="female" selected>Женский (Звонкий)</option>
-                <option value="child">Детский (Высокий)</option>
-            </select>
+            <label>Высота персонажа (%):</label>
+            <div class="range-box">
+                <input type="range" id="v-size" min="30" max="100" value="100">
+                <span id="v-size-val">100%</span>
+            </div>
         </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end;">
-        <div><label>Язык:</label><select id="v-lang"><option value="ru-RU">Русский</option><option value="en-US">English</option></select></div>
+        <div>
+            <label>Голос и Язык:</label>
+            <select id="v-type" style="margin-bottom: 5px;">
+                <option value="male">Мужской (Бас)</option>
+                <option value="female" selected>Женский (Звонкий)</option>
+                <option value="child">Детский (Высокий)</option>
+            </select>
+            <select id="v-lang"><option value="ru-RU">Русский</option><option value="en-US">English</option></select>
+        </div>
         <button class="btn btn-test" onclick="testV()">Тест голоса 🔊</button>
     </div>
 
     <div id="q-container" style="margin-top:20px;">
         <div class="q-item">
             <strong>Задание №1</strong>
-            <input type="text" class="qt" value="How do you do?">
-            <input type="text" class="qo" value="I am fine, Hello, OK">
+            <input type="text" class="qt" value="Listen and repeat: The cat is on the mat.">
+            <input type="text" class="qo" value="Cat, Dog, Mat">
             <input type="number" class="qc" value="1">
         </div>
     </div>
@@ -59,6 +67,10 @@
 </div>
 
 <script>
+    document.getElementById('v-size').oninput = function() {
+        document.getElementById('v-size-val').innerText = this.value + '%';
+    };
+
     let qCount = 1;
     function addQ() {
         if(qCount >= 10) return;
@@ -71,15 +83,13 @@
 
     function findVoice(lang, type) {
         const vs = window.speechSynthesis.getVoices();
-        const genderMatch = vs.find(v => v.lang.includes(lang) && v.name.toLowerCase().includes(type === 'male' ? 'male' : 'female'));
-        const nameMatch = vs.find(v => v.lang.includes(lang) && (v.name.includes(type === 'male' ? 'Pavel' : 'Irina') || v.name.includes(type === 'male' ? 'Dmitry' : 'Elena')));
-        return genderMatch || nameMatch || vs.find(v => v.lang.includes(lang)) || vs[0];
+        return vs.find(v => v.lang.includes(lang) && v.name.toLowerCase().includes(type === 'male' ? 'male' : 'female')) || vs.find(v => v.lang.includes(lang)) || vs[0];
     }
 
     function testV() {
         window.speechSynthesis.cancel();
         const t = document.getElementById('v-type').value, l = document.getElementById('v-lang').value;
-        const u = new SpeechSynthesisUtterance("Проверка голоса");
+        const u = new SpeechSynthesisUtterance("I will only say what is written.");
         u.lang = l; u.voice = findVoice(l, t);
         if(t==='male'){u.pitch=0.1; u.rate=0.85;} else if(t==='child'){u.pitch=2.0; u.rate=1.2;} else {u.pitch=1.4; u.rate=1.0;}
         window.speechSynthesis.speak(u);
@@ -87,8 +97,11 @@
 
     function generate() {
         const conf = {
-            url: document.getElementById('avatar-url').value, pos: document.getElementById('v-pos').value,
-            lang: document.getElementById('v-lang').value, vT: document.getElementById('v-type').value,
+            url: document.getElementById('avatar-url').value, 
+            pos: document.getElementById('v-pos').value,
+            size: document.getElementById('v-size').value,
+            lang: document.getElementById('v-lang').value, 
+            vT: document.getElementById('v-type').value,
             t: Array.from(document.querySelectorAll('.qt')).map(i => i.value),
             o: Array.from(document.querySelectorAll('.qo')).map(i => i.value),
             c: Array.from(document.querySelectorAll('.qc')).map(i => i.value)
@@ -96,7 +109,7 @@
         const isL = conf.pos === 'left';
         const code = `
 <div id="v-box" style="width:100%; height:100vh; position:relative; background:transparent; font-family:sans-serif; overflow:hidden;">
-    <img src="${conf.url}" style="position:absolute; bottom:0; ${isL?'left:0;':'right:0;'} height:100%; object-fit:contain; z-index:1;">
+    <img src="${conf.url}" style="position:absolute; bottom:0; ${isL?'left:0;':'right:0;'} height:${conf.size}%; object-fit:contain; z-index:1;">
     <div onclick="window.repeatPhrase()" style="position:absolute; top:5%; ${isL?'left:33%;':'right:33%;'} background:white; border:4px solid #6c5ce7; padding:15px; border-radius:20px; width:52%; box-shadow:0 10px 20px rgba(0,0,0,0.1); z-index:2; cursor:pointer;">
         <p style="margin:0; font-size:1.2em; font-weight:bold; color:#333;"><span id="v-msg"></span> 🔊</p>
     </div>
@@ -112,23 +125,30 @@
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(s); u.lang = d.l;
         const vs = window.speechSynthesis.getVoices();
-        let v = vs.find(x => x.lang.includes(d.l) && x.name.toLowerCase().includes(d.vt === 'male' ? 'male' : 'female'));
-        if(!v) v = vs.find(x => x.lang.includes(d.l));
-        u.voice = v;
+        u.voice = vs.find(x => x.lang.includes(d.l) && x.name.toLowerCase().includes(d.vt === 'male' ? 'male' : 'female')) || vs.find(x => x.lang.includes(d.l)) || vs[0];
         if(d.vt==='male'){u.pitch=0.1; u.rate=0.85;} else if(d.vt==='child'){u.pitch=2.0; u.rate=1.2;} else {u.pitch=1.4; u.rate=1.0;}
         window.speechSynthesis.speak(u);
     }
 
     function load() {
-        if(cur >= d.t.length) { document.getElementById('v-msg').innerText = "🏆 Отлично!"; document.getElementById('v-ans').innerHTML = ""; speak("Задания выполнены!"); return; }
+        if(cur >= d.t.length) { 
+            document.getElementById('v-msg').innerText = "🏆 Done!"; 
+            document.getElementById('v-ans').innerHTML = ""; 
+            return; // Больше ничего не говорит
+        }
         document.getElementById('v-msg').innerText = d.t[cur];
         const area = document.getElementById('v-ans'); area.innerHTML = "";
         d.o[cur].split(',').forEach((txt, i) => {
             const b = document.createElement('button'); b.innerText = txt.trim();
             b.style = "padding:15px; border-radius:12px; border:3px solid #6c5ce7; background:white; cursor:pointer; font-weight:bold; font-size:1.1em; color:#333;";
             b.onclick = () => {
-                if(i == (d.c[cur]-1)) { speak("Верно!"); cur++; setTimeout(load, 1500); }
-                else { speak("Нет"); b.style.background = "#ff7675"; setTimeout(()=>b.style.background="white", 600); }
+                if(i == (d.c[cur]-1)) { 
+                    // Просто переходим дальше без озвучки "Верно"
+                    cur++; 
+                    if(cur < d.t.length) { setTimeout(load, 800); } else { load(); }
+                } else {
+                    b.style.background = "#ff7675"; setTimeout(()=>b.style.background="white", 600);
+                }
             };
             area.appendChild(b);
         });
