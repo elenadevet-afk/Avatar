@@ -5,7 +5,7 @@
     <style>
         :root { --p-color: #6c5ce7; --bg: #f4f7fa; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        #editor { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 700px; }
+        #editor { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 750px; }
         .q-item { border-left: 5px solid var(--p-color); padding: 15px; margin-bottom: 10px; background: #f9f9f9; border-radius: 8px; }
         label { display: block; font-size: 12px; font-weight: bold; margin-top: 10px; color: #444; }
         input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
@@ -13,29 +13,46 @@
         .btn-add { background: #00b894; color: white; }
         .btn-gen { background: var(--p-color); color: white; font-size: 16px; }
         .btn-test { background: #fab1a0; color: #2d3436; }
-        #res-code { width: 100%; height: 150px; margin-top: 20px; display: none; background: #2d3436; color: #55efc4; padding: 10px; font-family: monospace; border-radius: 8px; font-size: 11px; }
-        .range-box { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+        #res-code { width: 100%; height: 120px; margin-top: 20px; display: none; background: #2d3436; color: #55efc4; padding: 10px; font-family: monospace; border-radius: 8px; font-size: 11px; }
+        
+        /* Стили предпросмотра */
+        #preview-area { 
+            width: 100%; 
+            height: 200px; 
+            border: 2px dashed #ccc; 
+            margin-top: 15px; 
+            border-radius: 10px; 
+            position: relative; 
+            overflow: hidden; 
+            background: #eee;
+            background-image: linear-gradient(45deg, #f5f5f5 25%, transparent 25%), linear-gradient(-45deg, #f5f5f5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f5f5f5 75%), linear-gradient(-45deg, transparent 75%, #f5f5f5 75%);
+            background-size: 20px 20px;
+        }
+        #pre-char { position: absolute; bottom: 0; transition: 0.3s; object-fit: contain; }
+        .pre-label { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.5); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div id="editor">
-    <h2 style="margin:0 0 15px 0; color: var(--p-color);">🎙️ Конструктор: Настройка размера + Молчаливый режим</h2>
+    <h2 style="margin:0 0 15px 0; color: var(--p-color);">🎙️ Конструктор с Предпросмотром</h2>
     
     <label>URL аватара (PNG):</label>
-    <input type="text" id="avatar-url" value="https://cdn-icons-png.flaticon.com/512/4844/4844571.png">
+    <input type="text" id="avatar-url" value="https://cdn-icons-png.flaticon.com/512/4844/4844571.png" oninput="updatePre()">
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
         <div>
-            <label>Позиция:</label>
-            <select id="v-pos"><option value="left">СЛЕВА</option><option value="right">СПРАВА</option></select>
+            <label>Позиция и Размер:</label>
+            <select id="v-pos" onchange="updatePre()">
+                <option value="left">СЛЕВА</option>
+                <option value="right">СПРАВА</option>
+            </select>
+            <input type="range" id="v-size" min="30" max="100" value="100" style="margin-top:15px;" oninput="updatePre()">
+            <div style="text-align: center; font-size: 12px; font-weight: bold;" id="v-size-val">Высота: 100%</div>
         </div>
-        <div>
-            <label>Высота персонажа (%):</label>
-            <div class="range-box">
-                <input type="range" id="v-size" min="30" max="100" value="100">
-                <span id="v-size-val">100%</span>
-            </div>
+        <div id="preview-area">
+            <span class="pre-label">ПРЕДПРОСМОТР РАЗМЕРА</span>
+            <img id="pre-char" src="https://cdn-icons-png.flaticon.com/512/4844/4844571.png" style="height: 100%; left: 0;">
         </div>
     </div>
 
@@ -55,21 +72,34 @@
     <div id="q-container" style="margin-top:20px;">
         <div class="q-item">
             <strong>Задание №1</strong>
-            <input type="text" class="qt" value="Listen and repeat: The cat is on the mat.">
-            <input type="text" class="qo" value="Cat, Dog, Mat">
+            <input type="text" class="qt" value="Look at the screen and answer the question.">
+            <input type="text" class="qo" value="Yes, No, Maybe">
             <input type="number" class="qc" value="1">
         </div>
     </div>
 
     <button class="btn btn-add" onclick="addQ()">➕ Добавить задание</button>
-    <button class="btn btn-gen" onclick="generate()">Сгенерировать iframe</button>
+    <button class="btn btn-gen" onclick="generate()">Сгенерировать код для Genially</button>
     <textarea id="res-code" readonly></textarea>
 </div>
 
 <script>
-    document.getElementById('v-size').oninput = function() {
-        document.getElementById('v-size-val').innerText = this.value + '%';
-    };
+    function updatePre() {
+        const url = document.getElementById('avatar-url').value;
+        const size = document.getElementById('v-size').value;
+        const pos = document.getElementById('v-pos').value;
+        const img = document.getElementById('pre-char');
+        
+        img.src = url;
+        img.style.height = size + '%';
+        document.getElementById('v-size-val').innerText = 'Высота: ' + size + '%';
+        
+        if(pos === 'left') {
+            img.style.left = '0'; img.style.right = 'auto';
+        } else {
+            img.style.right = '0'; img.style.left = 'auto';
+        }
+    }
 
     let qCount = 1;
     function addQ() {
@@ -89,7 +119,7 @@
     function testV() {
         window.speechSynthesis.cancel();
         const t = document.getElementById('v-type').value, l = document.getElementById('v-lang').value;
-        const u = new SpeechSynthesisUtterance("I will only say what is written.");
+        const u = new SpeechSynthesisUtterance("Testing voice settings.");
         u.lang = l; u.voice = findVoice(l, t);
         if(t==='male'){u.pitch=0.1; u.rate=0.85;} else if(t==='child'){u.pitch=2.0; u.rate=1.2;} else {u.pitch=1.4; u.rate=1.0;}
         window.speechSynthesis.speak(u);
@@ -120,7 +150,6 @@
     const d = {t:${JSON.stringify(conf.t)}, o:${JSON.stringify(conf.o)}, c:${JSON.stringify(conf.c)}, l:"${conf.lang}", vt:"${conf.vT}"};
     let cur = 0;
     window.repeatPhrase = () => speak(d.t[cur]);
-
     function speak(s) {
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(s); u.lang = d.l;
@@ -129,26 +158,16 @@
         if(d.vt==='male'){u.pitch=0.1; u.rate=0.85;} else if(d.vt==='child'){u.pitch=2.0; u.rate=1.2;} else {u.pitch=1.4; u.rate=1.0;}
         window.speechSynthesis.speak(u);
     }
-
     function load() {
-        if(cur >= d.t.length) { 
-            document.getElementById('v-msg').innerText = "🏆 Done!"; 
-            document.getElementById('v-ans').innerHTML = ""; 
-            return; // Больше ничего не говорит
-        }
+        if(cur >= d.t.length) { document.getElementById('v-msg').innerText = "🏆 Done!"; document.getElementById('v-ans').innerHTML = ""; return; }
         document.getElementById('v-msg').innerText = d.t[cur];
         const area = document.getElementById('v-ans'); area.innerHTML = "";
         d.o[cur].split(',').forEach((txt, i) => {
             const b = document.createElement('button'); b.innerText = txt.trim();
             b.style = "padding:15px; border-radius:12px; border:3px solid #6c5ce7; background:white; cursor:pointer; font-weight:bold; font-size:1.1em; color:#333;";
             b.onclick = () => {
-                if(i == (d.c[cur]-1)) { 
-                    // Просто переходим дальше без озвучки "Верно"
-                    cur++; 
-                    if(cur < d.t.length) { setTimeout(load, 800); } else { load(); }
-                } else {
-                    b.style.background = "#ff7675"; setTimeout(()=>b.style.background="white", 600);
-                }
+                if(i == (d.c[cur]-1)) { cur++; if(cur < d.t.length) { setTimeout(load, 800); } else { load(); } }
+                else { b.style.background = "#ff7675"; setTimeout(()=>b.style.background="white", 600); }
             };
             area.appendChild(b);
         });
@@ -160,6 +179,7 @@
 <\/script>`.trim();
         const res = document.getElementById('res-code'); res.style.display = 'block'; res.value = code; res.select();
     }
+    updatePre();
 </script>
 </body>
 </html>
