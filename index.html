@@ -14,7 +14,6 @@
         .btn-gen { background: var(--p-color); color: white; font-size: 16px; }
         .btn-test { background: #fab1a0; color: #2d3436; }
         
-        /* Стили ПАНЕЛИ ПРЕДПРОСМОТРА */
         .preview-container { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
@@ -32,7 +31,6 @@
             border-radius: 10px; 
             position: relative; 
             overflow: hidden; 
-            /* Шахматный фон для прозрачности */
             background-color: #eee;
             background-image: linear-gradient(45deg, #fff 25%, transparent 25%), linear-gradient(-45deg, #fff 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #fff 75%), linear-gradient(-45deg, transparent 75%, #fff 75%);
             background-size: 20px 20px;
@@ -46,9 +44,9 @@
 <body>
 
 <div id="editor">
-    <h2 style="margin:0 0 15px 0; color: var(--p-color);">🎙️ Конструктор: Настройка аватара</h2>
+    <h2 style="margin:0 0 15px 0; color: var(--p-color);">🎙️ Конструктор: Фикс для Genially</h2>
     
-    <label>URL аватара (PNG на прозрачном фоне):</label>
+    <label>URL аватара (PNG):</label>
     <input type="text" id="avatar-url" value="https://cdn-icons-png.flaticon.com/512/4844/4844571.png" oninput="updatePre()">
 
     <div class="preview-container">
@@ -65,18 +63,18 @@
         </div>
 
         <div id="preview-window">
-            <span class="pre-badge">ПРЕВЬЮ РАЗМЕРА</span>
+            <span class="pre-badge">ПРЕВЬЮ</span>
             <img id="pre-char-img" src="" style="height: 100%;">
         </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; margin-top: 15px;">
         <div>
-            <label>Голос и Язык:</label>
+            <label>Голос:</label>
             <select id="v-type" style="margin-bottom:5px;">
-                <option value="male">Мужской (Бас)</option>
-                <option value="female" selected>Женский (Звонкий)</option>
-                <option value="child">Детский (Высокий)</option>
+                <option value="male">Мужской</option>
+                <option value="female" selected>Женский</option>
+                <option value="child">Детский</option>
             </select>
             <select id="v-lang"><option value="ru-RU">Русский</option><option value="en-US">English</option></select>
         </div>
@@ -98,22 +96,16 @@
 </div>
 
 <script>
-    // Обновление превью в реальном времени
     function updatePre() {
         const url = document.getElementById('avatar-url').value;
         const size = document.getElementById('v-size').value;
         const pos = document.getElementById('v-pos').value;
         const img = document.getElementById('pre-char-img');
-        
         img.src = url;
         img.style.height = size + '%';
         document.getElementById('v-size-val').innerText = size + '%';
-        
-        if(pos === 'left') {
-            img.style.left = '10px'; img.style.right = 'auto';
-        } else {
-            img.style.right = '10px'; img.style.left = 'auto';
-        }
+        if(pos === 'left') { img.style.left = '10px'; img.style.right = 'auto'; } 
+        else { img.style.right = '10px'; img.style.left = 'auto'; }
     }
 
     let qCount = 1;
@@ -134,7 +126,7 @@
     function testV() {
         window.speechSynthesis.cancel();
         const t = document.getElementById('v-type').value, l = document.getElementById('v-lang').value;
-        const u = new SpeechSynthesisUtterance("Testing voice");
+        const u = new SpeechSynthesisUtterance("Testing");
         u.lang = l; u.voice = findVoice(l, t);
         if(t==='male'){u.pitch=0.1; u.rate=0.85;} else if(t==='child'){u.pitch=2.0; u.rate=1.2;} else {u.pitch=1.4; u.rate=1.0;}
         window.speechSynthesis.speak(u);
@@ -153,12 +145,15 @@
         };
         const isL = conf.pos === 'left';
         const code = `
-<div id="v-box" style="width:100%; height:100vh; position:relative; background:transparent; font-family:sans-serif; overflow:hidden;">
-    <img src="${conf.url}" style="position:absolute; bottom:0; ${isL?'left:0;':'right:0;'} height:${conf.size}%; object-fit:contain; z-index:1;">
-    <div onclick="window.repeatPhrase()" style="position:absolute; top:5%; ${isL?'left:33%;':'right:33%;'} background:white; border:4px solid #6c5ce7; padding:15px; border-radius:20px; width:52%; box-shadow:0 10px 20px rgba(0,0,0,0.1); z-index:2; cursor:pointer;">
-        <p style="margin:0; font-size:1.2em; font-weight:bold; color:#333;"><span id="v-msg"></span> 🔊</p>
+<div id="v-game-container" style="width:100%; height:100%; min-height:400px; position:relative; background:transparent; font-family:sans-serif; overflow:hidden;">
+    <img src="${conf.url}" style="position:absolute; bottom:0; ${isL?'left:0;':'right:0;'} height:${conf.size}%; object-fit:contain; z-index:1; pointer-events:none;">
+    
+    <div id="v-content-wrapper" style="position:absolute; top:10%; ${isL?'left:35%;':'right:35%;'} width:60%; display:flex; flex-direction:column; gap:15px; z-index:10;">
+        <div onclick="window.repeatPhrase()" style="background:white; border:4px solid #6c5ce7; padding:15px; border-radius:20px; box-shadow:0 8px 15px rgba(0,0,0,0.1); cursor:pointer;">
+            <p style="margin:0; font-size:1.2em; font-weight:bold; color:#333;"><span id="v-msg"></span> 🔊</p>
+        </div>
+        <div id="v-ans" style="display:grid; gap:10px;"></div>
     </div>
-    <div id="v-ans" style="position:absolute; ${isL?'left:36%;':'right:36%;'} top:35%; display:grid; gap:10px; width:52%; z-index:3;"></div>
 </div>
 <script>
 (function(){
@@ -179,9 +174,9 @@
         const area = document.getElementById('v-ans'); area.innerHTML = "";
         d.o[cur].split(',').forEach((txt, i) => {
             const b = document.createElement('button'); b.innerText = txt.trim();
-            b.style = "padding:15px; border-radius:12px; border:3px solid #6c5ce7; background:white; cursor:pointer; font-weight:bold; font-size:1.1em; color:#333;";
+            b.style = "padding:12px; border-radius:12px; border:3px solid #6c5ce7; background:white; cursor:pointer; font-weight:bold; font-size:1.1em; color:#333; transition: 0.2s;";
             b.onclick = () => {
-                if(i == (d.c[cur]-1)) { cur++; if(cur < d.t.length) { setTimeout(load, 800); } else { load(); } }
+                if(i == (d.c[cur]-1)) { cur++; if(cur < d.t.length) { setTimeout(load, 500); } else { load(); } }
                 else { b.style.background = "#ff7675"; setTimeout(()=>b.style.background="white", 600); }
             };
             area.appendChild(b);
@@ -189,13 +184,11 @@
         speak(d.t[cur]);
     }
     window.speechSynthesis.onvoiceschanged = load;
-    setTimeout(load, 1000);
+    setTimeout(load, 800);
 })();
 <\/script>`.trim();
         const res = document.getElementById('res-code'); res.style.display = 'block'; res.value = code; res.select();
     }
-    
-    // Инициализация превью при загрузке
     window.onload = updatePre;
 </script>
 </body>
